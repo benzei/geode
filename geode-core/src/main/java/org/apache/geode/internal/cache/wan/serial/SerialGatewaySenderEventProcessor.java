@@ -291,6 +291,10 @@ public class SerialGatewaySenderEventProcessor extends AbstractGatewaySenderEven
             if (o != null && o instanceof GatewaySenderEventImpl) {
               GatewaySenderEventImpl ge = (GatewaySenderEventImpl) o;
               EventWrapper unprocessedEvent = this.unprocessedEvents.remove(ge.getEventId());
+              if (unprocessedEvent != null && ge.isConcurrencyConflict) {
+                logger.info(
+                    "GGG:secondary after removed by handleFailover:" + unprocessedEvent + ":" + ge);
+              }
               if (unprocessedEvent != null) {
                 unprocessedEvent.event.release();
                 if (this.unprocessedEvents.isEmpty()) {
@@ -633,6 +637,10 @@ public class SerialGatewaySenderEventProcessor extends AbstractGatewaySenderEven
         return;
       // now we can safely use the unprocessedEvents field
       EventWrapper ew = this.unprocessedEvents.remove(gatewayEvent.getEventId());
+      if (ew != null && gatewayEvent.isConcurrencyConflict) {
+        logger.info("GGG:secondary after removed by destroy listener:" + ew + ":" + gatewayEvent);
+      }
+
       if (ew != null) {
         ew.event.release();
         statistics.incUnprocessedEventsRemovedByPrimary();
@@ -652,6 +660,9 @@ public class SerialGatewaySenderEventProcessor extends AbstractGatewaySenderEven
         return;
       // now we can safely use the unprocessedEvents field
       EventWrapper ew = this.unprocessedEvents.remove(gatewayEvent.getEventId());
+      if (ew != null && gatewayEvent.isConcurrencyConflict) {
+        logger.info("GGG:secondary after removed by create listener:" + ew + ":" + gatewayEvent);
+      }
 
       if (ew == null) {
         // first time for the event
@@ -713,7 +724,7 @@ public class SerialGatewaySenderEventProcessor extends AbstractGatewaySenderEven
       // now we can safely use the unprocessedEvents field
       Long v = this.unprocessedTokens.remove(gatewayEvent.getEventId());
       if (v != null && gatewayEvent.isConcurrencyConflict) {
-        logger.info("GGG:secondary after removed:" + v + ":" + gatewayEvent);
+        logger.info("GGG:secondary after removed token:" + v + ":" + gatewayEvent);
       }
 
       if (v == null) {
