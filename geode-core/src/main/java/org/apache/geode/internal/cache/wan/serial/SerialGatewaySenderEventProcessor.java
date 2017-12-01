@@ -661,10 +661,15 @@ public class SerialGatewaySenderEventProcessor extends AbstractGatewaySenderEven
       // now we can safely use the unprocessedEvents field
       EventWrapper ew = this.unprocessedEvents.remove(gatewayEvent.getEventId());
       if (ew != null && gatewayEvent.isConcurrencyConflict) {
-        logger.info("GGG:secondary after removed by create listener:" + ew + ":" + gatewayEvent);
+        logger.info("GGG:secondary after removed by create listener:" + ew + ":" + gatewayEvent,
+            new Exception());
       }
 
       if (ew == null) {
+        if (gatewayEvent.isConcurrencyConflict) {
+          logger.info("GGG:secondary before add to by create listener:" + gatewayEvent,
+              new Exception());
+        }
         // first time for the event
         if (logger.isTraceEnabled()) {
           logger.trace("{}: fromPrimary event {} : {}->{} added to unprocessed token map",
